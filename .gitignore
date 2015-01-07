@@ -1,0 +1,6 @@
+node_modules/
+build/
+*.swo
+*.swp
+npm-debug.log
+
