@@ -3,29 +3,75 @@
 Designed to be a highly-scalable Ripple notification architecture that can monitor many Ripple accounts
 at the same time, and POST notifications to any desired https endpoint.
 
-## Usage
+## Configuration
 
-The Notifier class starts a long-running process that uses Zeromq to accept and reply to messages. Two
-messages can be sent to the notifier process. Never stop the main Notifier process but rather connect
-to it from another system process via ZeroMQ.
+All configuration is done via ENVIRONMENT variables, the following are required:
 
-    var notifier = new Notifier({
-      port: 'tcp://127.0.0.1:7777'
-    })
+- RIPPLE_REST_URL
+- DEFAULT_NOTIFICATION_URL
+- PORT (defaults to 5000)
+- HOST (defaults to 127.0.0.1)
 
-    notifier.start()
+## REST API
 
-You can add as many monitors as you would like.
+#### Monitor account
 
-    RN.addMonitor({
-      account: 'stevenzeiler',
-      notificationURL: 'https://127.0.0.1:5000/ripple/notifications'
-    })
+Enable monitoring of payments sent to and from the account, which are recorded in the
+local Ripple Sync database and become queryable.
 
-You can also remove existing monitors.
+````
+POST /accounts/:account/monitor
+````
+Request Parameters:
+  - notification_url (overrides default from environment)
+  - last_hash (optional)
 
-    RN.removeMonitor({
-      account: 'stevenzeiler',
-      notificationURL: 'https://127.0.0.1:5000/ripple/notifications'
-    })
+Response Body:
+  - uid
+  - account
+  - last_hash
+  - state
+  - notification_url
+
+#### Get Monitor Status
+````
+GET /accounts/:account/monitor
+````
+Response Body:
+  - uid
+  - account
+  - last_hash
+  - state
+  - notification_url
+
+
+#### Stop Monitoring
+
+Disable monitoring of payments sent to and from the account. Monitoring can be resumed
+at the point in history where terminated.
+
+````
+DELETE /accounts/:account/monitor
+````
+
+#### List Notifications
+
+All incoming payments are recorded and added to the notifications queue, which can be
+viewed and cleared out after processing.
+
+````
+GET /accounts/:account/notifications
+````
+
+#### Clear Notification
+
+````
+DELETE /accounts/:account/notificiations/:hash
+````
+
+#### Clear All Notifications
+
+````
+DELETE /accounts/:account/notificiations
+````
 
